@@ -127,8 +127,8 @@ lib/
 
 1. **Clone repository**
    ```bash
-   git clone https://github.com/ariscandra/PAB-Mini_Project1.git
-   cd PAB-Mini_Project1
+   git clone https://github.com/ariscandra/pab_mini_project1.git
+   cd pab_mini_project1
    ```
 
 2. **Pasang dependensi**
