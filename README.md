@@ -146,5 +146,5 @@ lib/
 ---
 
 <p align="center">
-  <sub>Mini Proyek PAB (Pemrograman Aplikasi Bergerak)</sub>
+  <sub>Mini Proyek 1 PAB (Pemrograman Aplikasi Bergerak)</sub>
 </p>
