@@ -1,61 +1,37 @@
 import 'package:flutter/material.dart';
+import 'package:get/get.dart';
+import 'package:google_fonts/google_fonts.dart';
+import '../controllers/media_controller.dart';
 import '../models/media_item.dart';
+import '../utils/responsive.dart';
 import 'media_form_page.dart';
 
-class MediaListPage extends StatefulWidget {
+class MediaListPage extends StatelessWidget {
   const MediaListPage({super.key});
 
-  @override
-  State<MediaListPage> createState() => _MediaListPageState();
-}
-
-class _MediaListPageState extends State<MediaListPage> {
-  final List<MediaItem> _daftarMedia = [];
-
-  Future<void> _konfirmasiHapus(MediaItem media) async {
-    final ya = await showDialog<bool>(
-      context: context,
-      builder: (ctx) => AlertDialog(
-        title: const Text('Hapus media?'),
-        content: Text('"${media.title}" akan dihapus dari daftar.'),
+  void _konfirmasiHapus(MediaItem media) {
+    Get.dialog<bool>(
+      AlertDialog(
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+        title: Text('Hapus media?', style: GoogleFonts.poppins(fontWeight: FontWeight.w600)),
+        content: Text(
+          '"${media.title}" akan dihapus dari daftar.',
+          style: GoogleFonts.poppins(),
+        ),
         actions: [
           TextButton(
-            onPressed: () => Navigator.pop(ctx, false),
-            child: const Text('Batal'),
+            onPressed: () => Get.back(result: false),
+            child: Text('Batal', style: GoogleFonts.poppins()),
           ),
           FilledButton(
-            onPressed: () => Navigator.pop(ctx, true),
-            child: const Text('Hapus'),
+            onPressed: () => Get.back(result: true),
+            child: Text('Hapus', style: GoogleFonts.poppins(fontWeight: FontWeight.w500)),
           ),
         ],
       ),
-    );
-    if (ya == true && mounted) {
-      setState(() => _daftarMedia.removeWhere((m) => m.id == media.id));
-    }
-  }
-
-  Future<void> _bukaFormTambah() async {
-    final hasil = await Navigator.push<MediaItem>(
-      context,
-      MaterialPageRoute(builder: (context) => const MediaFormPage()),
-    );
-    if (hasil != null && mounted) {
-      setState(() => _daftarMedia.add(hasil));
-    }
-  }
-
-  Future<void> _bukaFormUbah(MediaItem media) async {
-    final hasil = await Navigator.push<MediaItem>(
-      context,
-      MaterialPageRoute(builder: (context) => MediaFormPage(item: media)),
-    );
-    if (hasil != null && mounted) {
-      setState(() {
-        final idx = _daftarMedia.indexWhere((m) => m.id == hasil.id);
-        if (idx >= 0) _daftarMedia[idx] = hasil;
-      });
-    }
+    ).then((ya) {
+      if (ya == true) Get.find<MediaController>().hapus(media);
+    });
   }
 
   IconData _ikonUntukTipe(String tipe) {
@@ -70,57 +46,110 @@ class _MediaListPageState extends State<MediaListPage> {
 
   @override
   Widget build(BuildContext context) {
+    final ctrl = Get.find<MediaController>();
+    final padding = Responsive.paddingHorizontal(context);
+    final maxW = Responsive.maxContentWidth(context);
+
     return Scaffold(
       appBar: AppBar(
         title: const Text('Media Tracker'),
       ),
-      body: _daftarMedia.isEmpty
-          ? Center(
-              child: Column(
-                mainAxisAlignment: MainAxisAlignment.center,
-                children: [
-                  Icon(Icons.queue_play_next_rounded, size: 80, color: Colors.grey.shade400),
-                  const SizedBox(height: 16),
-                  Text(
-                    'Belum ada media',
-                    style: Theme.of(context).textTheme.titleMedium?.copyWith(color: Colors.grey.shade600),
-                  ),
-                  const SizedBox(height: 4),
-                  Text(
-                    'Tekan tombol + untuk menambah',
-                    style: Theme.of(context).textTheme.bodyMedium?.copyWith(color: Colors.grey.shade500),
-                  ),
-                ],
-              ),
-            )
-          : ListView.builder(
-              padding: const EdgeInsets.only(top: 8, bottom: 80),
-              itemCount: _daftarMedia.length,
-              itemBuilder: (context, index) {
-                final media = _daftarMedia[index];
-                return Card(
-                  child: ListTile(
-                    leading: CircleAvatar(
-                      backgroundColor: Theme.of(context).colorScheme.primaryContainer,
-                      child: Icon(_ikonUntukTipe(media.type), color: Theme.of(context).colorScheme.onPrimaryContainer),
+      body: SafeArea(
+        child: Center(
+          child: ConstrainedBox(
+            constraints: BoxConstraints(maxWidth: maxW),
+            child: Obx(
+              () {
+                if (ctrl.daftarMedia.isEmpty) {
+                  return Padding(
+                    padding: EdgeInsets.all(padding),
+                    child: Column(
+                      mainAxisAlignment: MainAxisAlignment.center,
+                      children: [
+                        Icon(
+                          Icons.queue_play_next_rounded,
+                          size: Responsive.isMobile(context) ? 72 : 88,
+                          color: Colors.grey.shade400,
+                        ),
+                        SizedBox(height: Responsive.spacing(context)),
+                        Text(
+                          'Belum ada media',
+                          style: GoogleFonts.poppins(
+                            fontSize: Responsive.fontSizeJudul(context),
+                            fontWeight: FontWeight.w500,
+                            color: Colors.grey.shade700,
+                          ),
+                          textAlign: TextAlign.center,
+                        ),
+                        const SizedBox(height: 8),
+                        Text(
+                          'Tekan tombol + untuk menambah',
+                          style: GoogleFonts.poppins(
+                            fontSize: 14,
+                            color: Colors.grey.shade500,
+                          ),
+                          textAlign: TextAlign.center,
+                        ),
+                      ],
                     ),
-                    title: Text(
-                      media.title,
-                      style: const TextStyle(fontWeight: FontWeight.w600),
-                    ),
-                    subtitle: Text('${media.type} · ${media.status}'),
-                    isThreeLine: false,
-                    onTap: () => _bukaFormUbah(media),
-                    trailing: IconButton(
-                      icon: const Icon(Icons.delete_outline_rounded),
-                      onPressed: () => _konfirmasiHapus(media),
-                    ),
-                  ),
+                  );
+                }
+                return ListView.builder(
+                  padding: EdgeInsets.fromLTRB(padding, 12, padding, 100),
+                  itemCount: ctrl.daftarMedia.length,
+                  itemBuilder: (context, index) {
+                    final media = ctrl.daftarMedia[index];
+                    return Card(
+                      child: ListTile(
+                        contentPadding: EdgeInsets.symmetric(
+                          horizontal: padding,
+                          vertical: Responsive.isMobile(context) ? 8 : 12,
+                        ),
+                        leading: CircleAvatar(
+                          radius: Responsive.isMobile(context) ? 22 : 26,
+                          backgroundColor: Theme.of(context).colorScheme.primaryContainer,
+                          child: Icon(
+                            _ikonUntukTipe(media.type),
+                            color: Theme.of(context).colorScheme.onPrimaryContainer,
+                            size: Responsive.isMobile(context) ? 24 : 28,
+                          ),
+                        ),
+                        title: Text(
+                          media.title,
+                          style: GoogleFonts.poppins(
+                            fontWeight: FontWeight.w600,
+                            fontSize: Responsive.isMobile(context) ? 15 : 16,
+                          ),
+                        ),
+                        subtitle: Text(
+                          '${media.type} · ${media.status}',
+                          style: GoogleFonts.poppins(
+                            fontSize: 13,
+                            color: Colors.grey.shade600,
+                          ),
+                        ),
+                        onTap: () async {
+                          final hasil = await Get.to<MediaItem>(() => MediaFormPage(item: media));
+                          if (hasil != null) ctrl.ubah(hasil);
+                        },
+                        trailing: IconButton(
+                          icon: const Icon(Icons.delete_outline_rounded),
+                          onPressed: () => _konfirmasiHapus(media),
+                        ),
+                      ),
+                    );
+                  },
                 );
               },
             ),
+          ),
+        ),
+      ),
       floatingActionButton: FloatingActionButton(
-        onPressed: _bukaFormTambah,
+        onPressed: () async {
+          final hasil = await Get.to<MediaItem>(() => const MediaFormPage());
+          if (hasil != null) ctrl.tambah(hasil);
+        },
         child: const Icon(Icons.add_rounded),
       ),
     );

@@ -1,21 +1,22 @@
 <p align="center">
   <img src="https://img.shields.io/badge/Flutter-3.10-blue?style=for-the-badge&logo=flutter&logoColor=white" alt="Flutter" />
   <img src="https://img.shields.io/badge/Dart-3.10-0175C2?style=for-the-badge&logo=dart&logoColor=white" alt="Dart" />
-  <img src="https://img.shields.io/badge/Material_3-Enabled-teal?style=for-the-badge" alt="Material 3" />
+  <img src="https://img.shields.io/badge/GetX-4.7-teal?style=for-the-badge" alt="GetX" />
+  <img src="https://img.shields.io/badge/Material_3-Enabled-64748b?style=for-the-badge" alt="Material 3" />
 </p>
 
 <h1 align="center">Media Tracker</h1>
 <p align="center">
-  <i>Aplikasi untuk tracking progress film, series, buku, anime, dan game favoritmu</i>
+  <i>Aplikasi untuk melacak film, series, buku, anime, dan game favoritmu</i>
 </p>
 
 ---
 
 ## Daftar Isi
 
-- [Daftar Isi](#daftar-isi)
 - [Deskripsi](#deskripsi)
 - [Fitur](#fitur)
+- [Parameter antar Halaman](#parameter-antar-halaman)
 - [Widget yang Digunakan](#widget-yang-digunakan)
 - [Struktur Proyek](#struktur-proyek)
 - [Cara Menjalankan](#cara-menjalankan)
@@ -26,7 +27,7 @@
 
 **Media Tracker** adalah aplikasi mobile yang dibangun dengan Flutter untuk mata kuliah Pemrograman Aplikasi Bergerak (PAB). Aplikasi ini memungkinkan pengguna mencatat dan mengelola daftar media, mulai dari film, serial TV, buku, anime, hingga game, dalam satu tempat.
 
-Dengan tampilan yang bersih dan navigasi yang intuitif, kamu bisa menambah media baru, melihat daftar yang sudah dicatat, mengubah data yang salah ketik, atau menghapus entri yang sudah tidak relevan.
+Tampilan dirancang responsif untuk semua perangkat (ponsel, tablet, desktop), menggunakan font Poppins, dan dibangun dengan GetX untuk navigasi dan state management. Pengguna bisa menambah media baru, melihat daftar, mengubah data, atau menghapus entri dengan navigasi multi halaman yang lancar.
 
 ---
 
@@ -41,20 +42,42 @@ Dengan tampilan yang bersih dan navigasi yang intuitif, kamu bisa menambah media
 
 | Fitur | Keterangan |
 |-------|------------|
-| Tambah media | Form input dengan 3 field (Judul, Tipe, Status) |
-| Tampilkan daftar | Daftar media dalam bentuk kartu dengan ikon sesuai tipe |
-| Edit media | Ketuk item untuk membuka form edit |
+| Tambah media | Form dengan Judul, Tipe (TextField), Status (dropdown) |
+| Tampilkan daftar | Kartu media dengan ikon dinamis sesuai tipe |
+| Edit media | Ketuk item untuk membuka form dengan data terisi |
 | Hapus media | Tombol hapus dengan dialog konfirmasi |
-| Multi-page | Navigasi antar halaman daftar dan form |
+| Multi-page | Navigasi daftar ↔ form via GetX |
+| Responsif | Layout menyesuaikan mobile, tablet, dan desktop |
 
 <details>
 <summary><b>Detail fitur per halaman</b></summary>
 
-- **Halaman Daftar:** Menampilkan semua media dalam ListView, ikon dinamis (film, series, buku, anime, game), empty state saat belum ada data
-- **Form Tambah/Edit:** Tiga TextField (Judul, Tipe, Status) dengan validasi dan ikon prefix
-- **Konfirmasi Hapus:** AlertDialog sebelum data dihapus
+- **Halaman Daftar:** ListView reaktif (Obx), ikon sesuai tipe media, empty state, FAB tambah
+- **Form Tambah/Edit:** TextField (Judul, Tipe), DropdownButtonFormField (Status: Plan To, On Going, Done), validasi, menerima parameter via constructor
+- **Konfirmasi Hapus:** Get.dialog dengan AlertDialog
 
 </details>
+
+---
+
+## Parameter antar Halaman
+
+Aplikasi menerapkan pengiriman parameter dari halaman A ke halaman B lewat constructor.
+
+**Contoh:** Saat pengguna mengetuk item di halaman daftar untuk edit, halaman daftar mengirim objek `MediaItem` ke halaman form lewat constructor:
+
+```dart
+// Halaman A (MediaListPage) mengirim parameter
+Get.to(() => MediaFormPage(item: media));
+
+// Halaman B (MediaFormPage) menerima lewat constructor
+class MediaFormPage extends StatefulWidget {
+  final MediaItem? item;  // item = null untuk tambah, terisi untuk edit
+  const MediaFormPage({super.key, this.item});
+}
+```
+
+Untuk tambah media, parameter `item` dikirim sebagai `null`. Untuk edit, `item` berisi data media yang dipilih.
 
 ---
 
@@ -62,35 +85,42 @@ Dengan tampilan yang bersih dan navigasi yang intuitif, kamu bisa menambah media
 
 <p>
   <img src="https://img.shields.io/badge/Layout-Column_Row_ListView-64748b?style=flat-square" alt="Layout" />
-  <img src="https://img.shields.io/badge/Input-Form_TextFormField-64748b?style=flat-square" alt="Input" />
-  <img src="https://img.shields.io/badge/Aksi-Button_IconButton_FAB-64748b?style=flat-square" alt="Aksi" />
+  <img src="https://img.shields.io/badge/Input-Form_Dropdown-64748b?style=flat-square" alt="Input" />
+  <img src="https://img.shields.io/badge/State-GetX_Obx-64748b?style=flat-square" alt="GetX" />
 </p>
 
-| Kategori | Widget |
-|----------|--------|
-| **Struktur** | `MaterialApp`, `Scaffold`, `Form` |
-| **Layout** | `Column`, `Row`, `ListView`, `ListView.builder` |
+| Kategori | Widget / Komponen |
+|----------|-------------------|
+| **Struktur** | `GetMaterialApp`, `Scaffold`, `Form`, `SafeArea` |
+| **Layout** | `Column`, `Row`, `ListView`, `ListView.builder`, `ConstrainedBox`, `SingleChildScrollView` |
 | **Kontainer** | `Container`, `Card`, `CircleAvatar` |
-| **Input** | `TextFormField`, `InputDecoration` |
-| **Navigasi** | `Navigator.push` / `pop`, `MaterialPageRoute` |
-| **Tombol** | `ElevatedButton`, `FilledButton`, `FilledButton.icon`, `TextButton`, `IconButton`, `FloatingActionButton` |
-| **Dialog** | `AlertDialog`, `showDialog` |
+| **Input** | `TextFormField`, `DropdownButtonFormField`, `InputDecoration` |
+| **Navigasi** | `Get.to`, `Get.back`, `Get.dialog` |
+| **State** | `GetxController`, `Obx`, `RxList` |
+| **Tombol** | `FilledButton`, `FilledButton.icon`, `TextButton`, `IconButton`, `FloatingActionButton` |
+| **Dialog** | `AlertDialog`, `Get.dialog` |
 | **Lainnya** | `AppBar`, `ListTile`, `Text`, `Icon` |
 
 <details>
 <summary><b>Widget per file</b></summary>
 
-**main.dart**
-- `MaterialApp`, `ThemeData`, `ColorScheme`, `AppBarTheme`, `CardThemeData`, `InputDecorationTheme`, `FloatingActionButtonThemeData`
+**main.dart**  
+`GetMaterialApp`, `ThemeData`, `GoogleFonts.poppinsTextTheme`, `ColorScheme`, `AppBarTheme`, `CardThemeData`, `InputDecorationTheme`, `FloatingActionButtonThemeData`
 
-**media_list_page.dart**
-- `Scaffold`, `AppBar`, `ListView.builder`, `Card`, `ListTile`, `CircleAvatar`, `Icon`, `IconButton`, `FloatingActionButton`, `AlertDialog`, `TextButton`, `FilledButton`
+**media_list_page.dart**  
+`Scaffold`, `AppBar`, `Obx`, `ListView.builder`, `Card`, `ListTile`, `CircleAvatar`, `Icon`, `IconButton`, `FloatingActionButton`, `AlertDialog`, `TextButton`, `FilledButton`, `ConstrainedBox`
 
-**media_form_page.dart**
-- `Scaffold`, `AppBar`, `Form`, `ListView`, `TextFormField`, `InputDecoration`, `FilledButton.icon`, `SizedBox`
+**media_form_page.dart**  
+`Scaffold`, `AppBar`, `Form`, `TextFormField`, `DropdownButtonFormField`, `InputDecoration`, `FilledButton.icon`, `SizedBox`, `SingleChildScrollView`
 
-**media_item.dart** (model)
-- Bukan widget; class data dengan `copyWith`, `toJson`, `fromJson`
+**media_controller.dart**  
+`GetxController`, `RxList` (bukan widget)
+
+**media_item.dart**  
+Model data dengan `copyWith`, `toJson`, `fromJson` (bukan widget)
+
+**responsive.dart**  
+Helper untuk layout responsif (bukan widget)
 
 </details>
 
@@ -103,12 +133,18 @@ Dengan tampilan yang bersih dan navigasi yang intuitif, kamu bisa menambah media
 
 ```
 lib/
-├── main.dart              # Entry point, theme, routing
+├── main.dart
+├── constants/
+│   └── status_options.dart    # Opsi dropdown status
+├── controllers/
+│   └── media_controller.dart  # GetX controller daftar media
 ├── models/
-│   └── media_item.dart    # Model data media
-└── pages/
-    ├── media_list_page.dart   # Halaman daftar (Read)
-    └── media_form_page.dart   # Form tambah/edit (Create, Update)
+│   └── media_item.dart
+├── pages/
+│   ├── media_list_page.dart
+│   └── media_form_page.dart
+└── utils/
+    └── responsive.dart        # Helper layout responsif
 ```
 
 </details>
